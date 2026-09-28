@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>NoteShare Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2 class="logo">NoteShare</h2>
+        <ul>
+            <li><a href="/" class="active">Dashboard</a></li>
+        </ul>
+        <div class="stats-box" style="margin-top: auto; margin-bottom: 2rem;">
+            <p>Logged in as: <br><strong th:text="${loggedInUsername}">User</strong></p>
+            <a href="/logout" class="btn btn-outline" style="margin-top: 1rem; width: 100%; text-align: center;">Logout</a>
+        </div>
+        <div class="stats-box">
+            <p>Notes: <span th:text="${totalNotes}"></span></p>
+            <p>Subjects: <span th:text="${totalSubjects}"></span></p>
+            <p>Students: <span th:text="${totalStudents}"></span></p>
+        </div>
+    </div>
+    <div class="main-content">
+        <header>
+            <h1>Discover & Share Notes</h1>
+            <p>Your one-stop student notes repository</p>
+        </header>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <div class="actions-bar">
+            <form action="/" method="GET" class="search-form" style="display: flex; gap: 10px; align-items: center;">
+                <select name="subjectId">
+                    <option value="">All Subjects</option>
+                    <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.name}"
+                        th:selected="${sub.id == selectedSubject}"></option>
+                </select>
+                <input type="text" name="unit" placeholder="Unit (Optional)" th:value="${selectedUnit}">
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" name="topRated" th:checked="${topRated}"> Top Rated Only
+                </label>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+            <button class="btn btn-success" onclick="document.getElementById('uploadModal').style.display='flex'">+
+                Upload Note</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('subjectModal').style.display='flex'">+ Add Subject</button>
+        </div>
+
+        <div class="notes-grid">
+            <div class="note-card" th:each="note : ${notes}">
+                <div class="note-header">
+                    <span class="subject-badge" th:text="${note.subject.name}">Subject</span>
+                    <span class="unit-badge" th:text="${note.unit}">Unit</span>
+                </div>
+                <h3 th:text="${note.title}">Note Title</h3>
+                <p>By: <strong th:text="${note.uploader.username}">Uploader</strong></p>
+                <div class="rating-display">
+                    Average Rating: <span class="stars">★</span> <span
+                        th:text="${#numbers.formatDecimal(note.averageRating, 1, 1)}">0.0</span>
+                </div>
+                <div class="note-actions">
+                    <a th:href="@{'/files/' + ${note.fileReference}}" target="_blank" class="btn btn-outline">Download File</a>
+                    <button class="btn btn-outline" th:onclick="'showRateModal(' + ${note.id} + ')'">Rate</button>
+                    <button class="btn btn-primary" th:onclick="'showUpdateModal(' + ${note.id} + ', \'' + ${note.title} + '\', \'' + ${note.unit} + '\', ' + ${note.subject.id} + ')'">Update</button>
+                    <form th:action="@{/web/notes/{id}/delete(id=${note.id})}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(notes)}" class="no-data">
+                <p>No notes found. Be the first to upload one!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('uploadModal').style.display='none'">&times;</span>
+            <h2>Upload a Note</h2>
+            <form action="/web/notes" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select name="subjectId" required>
+                        <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unit</label>
+                    <input type="text" name="unit" required>
+                </div>
+                <div class="form-group">
+                    <label>File to Upload</label>
+                    <input type="file" name="file" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rate Modal -->
+    <div id="rateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('rateModal').style.display='none'">&times;</span>
+            <h2>Rate Note</h2>
+            <form id="rateForm" method="POST">
+                <div class="form-group">
+                    <label>Score (1-5)</label>
+                    <input type="number" name="score" min="1" max="5" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Submit Rating</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('updateModal').style.display='none'">&times;</span>
+            <h2>Update Note</h2>
+            <form id="updateForm" method="POST">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="updateTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="updateSubjectId" name="subjectId" required>
+                        <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unit</label>
+                    <input type="text" id="updateUnit" name="unit" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Update Note</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subject Modal -->
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('subjectModal').style.display='none'">&times;</span>
+            <h2>Add Subject</h2>
+            <form action="/web/subjects" method="POST">
+                <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" name="name" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Add Subject</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showRateModal(noteId) {
+            document.getElementById('rateForm').action = '/web/notes/' + noteId + '/rate';
+            document.getElementById('rateModal').style.display = 'flex';
+        }
+
+        function showUpdateModal(noteId, title, unit, subjectId) {
+            document.getElementById('updateForm').action = '/web/notes/' + noteId + '/update';
+            document.getElementById('updateTitle').value = title;
+            document.getElementById('updateUnit').value = unit;
+            document.getElementById('updateSubjectId').value = subjectId;
+            document.getElementById('updateModal').style.display = 'flex';
+        }
+
+        window.onclick = function (event) {
+            if (event.target == document.getElementById('uploadModal')) {
+                document.getElementById('uploadModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('rateModal')) {
+                document.getElementById('rateModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('updateModal')) {
+                document.getElementById('updateModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('subjectModal')) {
+                document.getElementById('subjectModal').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>NoteShare Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="sidebar">
+        <h2 class="logo">NoteShare</h2>
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/admin" class="active">Admin / Settings</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <header>
+            <h1>Admin Panel</h1>
+            <p>Manage entities and master data</p>
+        </header>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>Add Subject</h2>
+                <form action="/web/subjects" method="POST">
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Subject</button>
+                </form>
+                <hr style="margin: 20px 0; border: 1px solid #eee;">
+                <h3>Existing Subjects</h3>
+                <ul>
+                    <li th:each="sub : ${subjects}" th:text="${sub.name}"></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Add Student</h2>
+                <form action="/web/students" method="POST">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select name="role">
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Student</button>
+                </form>
+                <hr style="margin: 20px 0; border: 1px solid #eee;">
+                <h3>Existing Students</h3>
+                <ul>
+                    <li th:each="stu : ${students}">
+                        <span th:text="${stu.username}"></span> - <span class="badge" th:text="${stu.role}"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
