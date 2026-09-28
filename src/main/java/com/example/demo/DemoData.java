@@ -14,17 +14,6 @@ public class DemoData {
     @Bean
     public CommandLineRunner initData(StudentRepository studentRepository, SubjectRepository subjectRepository) {
         return args -> {
-            if (studentRepository.count() == 0) {
-                Student admin = new Student("admin", "admin@noteshare.com", "admin123");
-                admin.setRole("ADMIN");
-                studentRepository.save(admin);
-                
-                Student user1 = new Student("alice", "alice@noteshare.com", "password123");
-                studentRepository.save(user1);
-                
-                Student user2 = new Student("bob", "bob@noteshare.com", "password123");
-                studentRepository.save(user2);
-            }
             if (subjectRepository.count() == 0) {
                 subjectRepository.save(new Subject("Mathematics"));
                 subjectRepository.save(new Subject("Computer Science"));

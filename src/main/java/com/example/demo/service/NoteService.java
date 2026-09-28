@@ -29,15 +29,8 @@ public class NoteService {
         return noteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Note not found")); 
     }
 
-    public List<Note> searchNotes(Long subjectId, String unit) {
-        if (subjectId != null && unit != null && !unit.isEmpty()) {
-            return noteRepository.findBySubjectIdAndUnit(subjectId, unit);
-        } else if (subjectId != null) {
-            return noteRepository.findBySubjectId(subjectId);
-        } else if (unit != null && !unit.isEmpty()) {
-            return noteRepository.findByUnit(unit);
-        }
-        return noteRepository.findAll();
+    public List<Note> searchNotes(Long subjectId, String unit, String fileName) {
+        return noteRepository.searchNotes(subjectId, unit, fileName);
     }
 
     public List<Note> getTopRatedNotesBySubject(Long subjectId) {

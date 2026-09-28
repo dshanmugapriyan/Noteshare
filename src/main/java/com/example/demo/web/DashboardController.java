@@ -44,7 +44,7 @@ public class DashboardController {
     }
 
     @GetMapping
-    public String dashboard(Model model, HttpSession session, @RequestParam(required = false) Long subjectId, @RequestParam(required = false) String unit, @RequestParam(required = false) Boolean topRated) {
+    public String dashboard(Model model, HttpSession session, @RequestParam(required = false) Long subjectId, @RequestParam(required = false) String unit, @RequestParam(required = false) String fileName, @RequestParam(required = false) Boolean topRated) {
         if (session.getAttribute("loggedInUserId") == null) {
             return "redirect:/login";
         }
@@ -52,7 +52,7 @@ public class DashboardController {
         if (Boolean.TRUE.equals(topRated) && subjectId != null) {
             model.addAttribute("notes", noteService.getTopRatedNotesBySubject(subjectId));
         } else {
-            model.addAttribute("notes", noteService.searchNotes(subjectId, unit));
+            model.addAttribute("notes", noteService.searchNotes(subjectId, unit, fileName));
         }
         
         model.addAttribute("subjects", subjectRepository.findAll());
@@ -61,6 +61,7 @@ public class DashboardController {
         model.addAttribute("totalStudents", studentRepository.count());
         model.addAttribute("selectedSubject", subjectId);
         model.addAttribute("selectedUnit", unit);
+        model.addAttribute("selectedFileName", fileName);
         model.addAttribute("topRated", topRated);
         model.addAttribute("loggedInUsername", session.getAttribute("loggedInUsername"));
         return "dashboard";
@@ -101,11 +102,18 @@ public class DashboardController {
     }
 
     @PostMapping("/web/notes/{id}/update")
-    public String updateNoteWeb(@PathVariable Long id, @ModelAttribute Note note, @RequestParam Long subjectId, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String updateNoteWeb(@PathVariable Long id, @ModelAttribute Note note, @RequestParam Long subjectId, @RequestParam(value = "file", required = false) MultipartFile file, HttpSession session, RedirectAttributes redirectAttrs) {
         Long requesterId = (Long) session.getAttribute("loggedInUserId");
         if (requesterId == null) return "redirect:/login";
 
         try {
+            if (file != null && !file.isEmpty()) {
+                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                Path targetLocation = this.fileStorageLocation.resolve(fileName);
+                Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+                note.setFileReference(fileName);
+            }
+            
             Subject subject = new Subject();
             subject.setId(subjectId);
             note.setSubject(subject);

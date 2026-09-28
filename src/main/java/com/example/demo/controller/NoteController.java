@@ -17,8 +17,8 @@ public class NoteController {
     @Autowired private NoteService noteService;
 
     @GetMapping
-    public List<Note> getAllNotes(@RequestParam(required = false) Long subjectId, @RequestParam(required = false) String unit) {
-        return noteService.searchNotes(subjectId, unit);
+    public List<Note> getAllNotes(@RequestParam(required = false) Long subjectId, @RequestParam(required = false) String unit, @RequestParam(required = false) String fileName) {
+        return noteService.searchNotes(subjectId, unit, fileName);
     }
 
     @GetMapping("/top-rated")

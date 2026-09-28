@@ -42,6 +42,7 @@
                         th:selected="${sub.id == selectedSubject}"></option>
                 </select>
                 <input type="text" name="unit" placeholder="Unit (Optional)" th:value="${selectedUnit}">
+                <input type="text" name="fileName" placeholder="File Name (Optional)" th:value="${selectedFileName}">
                 <label style="display: flex; align-items: center; gap: 5px;">
                     <input type="checkbox" name="topRated" th:checked="${topRated}"> Top Rated Only
                 </label>
@@ -66,8 +67,8 @@
                 </div>
                 <div class="note-actions">
                     <a th:href="@{'/files/' + ${note.fileReference}}" target="_blank" class="btn btn-outline">Download File</a>
-                    <button class="btn btn-outline" th:onclick="'showRateModal(' + ${note.id} + ')'">Rate</button>
-                    <button class="btn btn-primary" th:onclick="'showUpdateModal(' + ${note.id} + ', \'' + ${note.title} + '\', \'' + ${note.unit} + '\', ' + ${note.subject.id} + ')'">Update</button>
+                    <button class="btn btn-outline" th:data-id="${note.id}" onclick="showRateModal(this.getAttribute('data-id'))">Rate</button>
+                    <button class="btn btn-primary" th:data-id="${note.id}" th:data-title="${note.title}" th:data-unit="${note.unit}" th:data-subject="${note.subject.id}" onclick="showUpdateModal(this.getAttribute('data-id'), this.getAttribute('data-title'), this.getAttribute('data-unit'), this.getAttribute('data-subject'))">Update</button>
                     <form th:action="@{/web/notes/{id}/delete(id=${note.id})}" method="POST" style="display:inline;">
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
@@ -128,7 +129,7 @@
         <div class="modal-content">
             <span class="close" onclick="document.getElementById('updateModal').style.display='none'">&times;</span>
             <h2>Update Note</h2>
-            <form id="updateForm" method="POST">
+            <form id="updateForm" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Title</label>
                     <input type="text" id="updateTitle" name="title" required>
@@ -142,6 +143,10 @@
                 <div class="form-group">
                     <label>Unit</label>
                     <input type="text" id="updateUnit" name="unit" required>
+                </div>
+                <div class="form-group">
+                    <label>Update File (Optional)</label>
+                    <input type="file" id="updateFile" name="file">
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Update Note</button>
             </form>
